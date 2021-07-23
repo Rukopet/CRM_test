@@ -1,0 +1,1 @@
+# SberClick_test
