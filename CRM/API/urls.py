@@ -10,4 +10,7 @@ urlpatterns = [
     path('clients/create/<str:name>&<str:telegram>/', Clients.create_client),
     path('clients/create/', Clients.bad_request_check_documents),
     path('clients/', Clients.show_all)
+
+
+    # path('bids/', )
 ]
