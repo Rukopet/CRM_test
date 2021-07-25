@@ -17,17 +17,10 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 
-from ..API.views import bids_list
+from .views import main_index
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', bids_list, name='CRM_url'),
-
-    # path('documentation/')
-
-
-    # path('clients/', include('clients.urls')),
-    path('bids/', include('API.urls')),
-    # path('staff/', include('staff.urls'))
+    path('', main_index, name='CRM_url'),
+    path('', include('API.urls'))
 ]
