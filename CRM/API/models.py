@@ -16,11 +16,11 @@ class BidModel(models.Model):
     ]
 
     type_bid = models.IntegerField(choices=enum_type_bid)
-    client_id = models.IntegerField()
-    staff_id = models.IntegerField(blank=True)
-    text_bid = models.CharField(max_length=400, db_index=True)
-    title = models.CharField(max_length=100, db_index=True)
-    status = models.IntegerField(choices=enum_status)
+    client_id = models.IntegerField(unique=False)
+    staff_id = models.IntegerField(blank=True, null=True)
+    text_bid = models.CharField(max_length=400)
+    title = models.CharField(max_length=100, db_index=True, default="Bid")
+    status = models.IntegerField(choices=enum_status, default=1)
     date_create = models.DateField(auto_now_add=True)
     notifications = models.BooleanField(default=False)
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import documentation, Clients
+from .views import documentation, Clients, Bids
 
 urlpatterns = [
     path('documentation/', documentation, name="documentation_url"),
@@ -9,8 +9,10 @@ urlpatterns = [
     path('clients/<int:client_id>/', Clients.show_one),
     path('clients/create/<str:name>&<str:telegram>/', Clients.create_client),
     path('clients/create/', Clients.bad_request_check_documents),
-    path('clients/', Clients.show_all)
+    path('clients/', Clients.show_all),
 
 
-    # path('bids/', )
+    path('bids/', Bids.show_all),
+    path('bids/create/<int:type_bid>&<int:client_id>&<str:body>&<slug:title_bid>&<int:notifications>/', Bids.create_bid),
+    path('bids/<str:category>/', Bids.show_category)
 ]

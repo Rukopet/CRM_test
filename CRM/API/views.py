@@ -3,10 +3,11 @@ import json
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
 from django.core import serializers
-
-from .models import ClientModel, BidModel
+from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+from .models import ClientModel, BidModel
+from .serializers import BidModelSerializer
 
 # def bids_list(request):
 #     name = ["Oleg", "Vasya", "Petya"]
@@ -24,9 +25,47 @@ class Bids:
     @api_view(['GET'])
     def show_all(request):
         try:
-            qs = BidModel.objects.all()
-            qs_json = serializers.serialize('json', qs)
+            serializer = BidModelSerializer(BidModel.objects.all(), many=True )
+            # qs = BidModel.objects.all()
+            # qs_json = serializers.serialize('json', qs)
+            return Response(serializer.data)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    @staticmethod
+    def create_bid(request, type_bid: str, client_id: int, body: str, title_bid: str, notifications: int):
+        try:
+            bid = BidModel(type_bid=int(type_bid), client_id=int(client_id), text_bid=body, title=title_bid,
+                           notifications=bool(notifications))
+            bid.save()
+            return Clients.json_answer(True, "Bid create successful", 200)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
+
+        # enum_status = [
+        #     (1, 'open'),
+        #     (2, 'in work'),
+        #     (3, 'finished'),
+        # ]
+        #
+        # enum_type_bid = [
+        #     (1, 'fix'),
+        #     (2, 'consultation'),
+        #     (3, 'service')
+        # ]
+    @staticmethod
+    def show_category(request, category: str):
+        try:
+            # take index for database
+            idx = ["fix", "consultation", "service", "open", "in work", "finished"].index(category)
+            if idx < 3:
+                bids = BidModel.objects.filter(type_bid=idx+1)
+            else:
+                bids = BidModel.objects.filter(status=idx-2)
+            qs_json = serializers.serialize('json', bids)
             return HttpResponse(qs_json, content_type='application/json')
+        except ValueError:
+            return Clients.json_answer(False, "Bad sort type check docs", 404)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
@@ -58,7 +97,7 @@ class Clients:
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
         qs_json = serializers.serialize('json', qs)
-        return HttpResponse(qs_json, content_type='application/json')
+        return Res(qs_json, content_type='application/json')
 
     @staticmethod
     @api_view(['DELETE'])
@@ -74,7 +113,7 @@ class Clients:
             return Clients.json_answer(True, "delete successful", 200)
 
     @staticmethod
-    @api_view(['POST'])
+    # @api_view(['POST'])
     def create_client(request, name: str, telegram: str):
         tg_id = Clients.validate_telegram_id(telegram)
         if name.isspace() or not tg_id:
