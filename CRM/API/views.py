@@ -1,14 +1,14 @@
 import json
+from datetime import datetime
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
-from django.core import serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
-from .models import ClientModel, BidModel
-from .serializers import BidModelSerializer, ClientModelSerializer
+from .models import ClientModel, BidModel, StaffModel
+from .serializers import BidModelSerializer, ClientModelSerializer, StaffModelSerializer
 
 
 # def bids_list(request):
@@ -23,6 +23,27 @@ def documentation(request):
 
 
 class Bids(APIView):
+    @staticmethod
+    @api_view(['GET'])
+    def show_date(request, date: datetime):
+        try:
+            serializer = BidModelSerializer(BidModel.objects.filter(date_create=date), many=True)
+            return Response(serializer.data)
+        except BidModel.DoesNotExist:
+            return Clients.json_answer(False, "element not found", 404)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
+
+    @staticmethod
+    @api_view(['GET'])
+    def show_dates(request, date: datetime, up_date: datetime):
+        try:
+            bids = BidModel.objects.filter(date_create__gte=date, date_create__lte=up_date)
+            serializer = BidModelSerializer(bids, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
     @staticmethod
     @api_view(['GET'])
     def show_all(request):
@@ -52,7 +73,7 @@ class Bids(APIView):
     @api_view(['GET'])
     def show_one(request, bid: int):
         try:
-            serializer = BidModelSerializer(BidModel.objects.get(id=bid))
+            serializer = BidModelSerializer(BidModel.objects.get(id=bid), many=False)
             return Response(serializer.data)
         except BidModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
@@ -72,6 +93,27 @@ class Bids(APIView):
             return Response(qs_json.data)
         except ValueError:
             return Clients.json_answer(False, "Bad sort type check docs", 404)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    # TODO adding notifications if bid status changed or if staff be do work
+    @staticmethod
+    @api_view(['POST', 'GET'])
+    def change_one(request, bid: int, field: str, value: str):
+        try:
+            obj = BidModel.objects.get(id=bid)
+            if field == "creator":
+                creator_id = ClientModel.objects.get(client_id=int(value))
+                obj.creator.set([creator_id])
+            elif field == "staff_id":
+                staff_id = StaffModel.objects.get(id=int(value))
+                obj.staff_id.set([staff_id])
+            elif field != "id":
+                obj[field] = str(value)
+            else:
+                raise ValueError("Cant change id number")
+            obj.save()
+            return Response(status=200)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
@@ -138,7 +180,7 @@ class Clients(APIView):
         try:
             ClientModel(client_name=name, client_telegram_user_id=tg_id).save()
         except Exception as e:
-            return Clients.json_answer(True, "unknown error: {}".format(e), 400)
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
         return Clients.json_answer(True, "create successful", 200)
 
     def post(self, request):
@@ -181,3 +223,67 @@ class Clients(APIView):
             return False if not tg_id.isdigit() or len(tg_id) != 9 else tg_id
         else:
             return "null"
+
+
+class Staff(APIView):
+    @staticmethod
+    @api_view(['GET', 'POST'])
+    def change_one(request, staff_id: int, field: str, value: str):
+        try:
+            serializer = StaffModelSerializer(StaffModel.objects.get(id=staff_id), many=False)
+            return Response(serializer.data)
+        except ClientModel.DoesNotExist:
+            return Clients.json_answer(False, "element not found", 404)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    @staticmethod
+    @api_view(['GET', 'POST'])
+    def show_all(request):
+        try:
+            serializer = StaffModelSerializer(StaffModel.objects.all(), many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    def post(self, request):
+        try:
+            staff = StaffModelSerializer(data=request.data)
+            if staff.is_valid():
+                staff.save()
+                return Response(status=201)
+            else:
+                return Response(status=400)
+        except Exception as e:
+            return Clients.json_answer(True, "unknown error: {}".format(e), 400)
+
+    @staticmethod
+    @api_view(['GET', 'POST'])
+    def show_one(request, staff_id: int):
+        try:
+            serializer = StaffModelSerializer(StaffModel.objects.get(id=staff_id), many=False)
+            return Response(serializer.data)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    @staticmethod
+    @api_view(['GET', 'POST'])
+    def create_one(request, slug: str):
+        try:
+            StaffModel.objects.create(name=slug)
+            return Clients.json_answer(True, "element successful create", 200)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+
+    @staticmethod
+    @api_view(['GET', 'POST'])
+    def delete_one(request, staff_id: int):
+        try:
+            staff = StaffModel.objects.get(id=staff_id)
+            staff.delete()
+        except StaffModel.DoesNotExist:
+            return Clients.json_answer(False, "element not found", 404)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
+        else:
+            return Response(status=200)

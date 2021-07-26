@@ -24,12 +24,13 @@ class BidModel(models.Model):
 
     type_bid = models.IntegerField(choices=enum_type_bid)
     creator = models.ManyToManyField('ClientModel', related_name="bids", blank=True)
-    staff_id = models.IntegerField(blank=True, null=True)
+    staff_id = models.ManyToManyField('StaffModel', related_name="bids", blank=True)
     text_bid = models.CharField(max_length=400)
     title = models.CharField(max_length=100, db_index=True, default="Bid")
     status = models.IntegerField(choices=enum_status, default=1)
     date_create = models.DateField(auto_now_add=True)
     notifications = models.BooleanField(default=False)
 
+
 class StaffModel(models.Model):
-    a = 1
+    name = models.CharField(max_length=40)

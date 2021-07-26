@@ -1,4 +1,4 @@
-from .models import ClientModel, BidModel
+from .models import ClientModel, BidModel, StaffModel
 from rest_framework import serializers
 
 enum_status = (
@@ -20,11 +20,20 @@ class ClientModelSerializer(serializers.ModelSerializer):
         fields = ("__all__")
 
 
+class StaffModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StaffModel
+        fields = ("__all__")
+
+
 class BidModelSerializer(serializers.ModelSerializer):
-    creator = ClientModelSerializer(many=True, write_only=True)
-    status = serializers.CharField(source='get_status_display', write_only=True)
-    type_bid = serializers.CharField(source='get_type_bid_display', write_only=True)
+    creator = ClientModelSerializer(many=True)
+    status = serializers.CharField(source='get_status_display')
+    type_bid = serializers.CharField(source='get_type_bid_display')
+    staff_id = StaffModelSerializer(many=True)
 
     class Meta:
         model = BidModel
         fields = ("__all__")
+
+
