@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -11,6 +11,7 @@ from .models import ClientModel, BidModel, StaffModel
 from .serializers import BidModelSerializer, ClientModelSerializer, StaffModelSerializer
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 
 # def bids_list(request):
@@ -19,17 +20,16 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 #
 #
 
-
 def documentation(request):
     return render(request, 'API/documentation.html')
 
 
 class Bids(LoginRequiredMixin, APIView):
-
     raise_exception = True
 
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_date(request, date: datetime):
         try:
             serializer = BidModelSerializer(BidModel.objects.filter(date_create=date), many=True)
@@ -41,6 +41,7 @@ class Bids(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_dates(request, date: datetime, up_date: datetime):
         try:
             bids = BidModel.objects.filter(date_create__gte=date, date_create__lte=up_date)
@@ -51,6 +52,7 @@ class Bids(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_all(request):
         try:
             serializer = BidModelSerializer(BidModel.objects.all(), many=True)
@@ -59,6 +61,7 @@ class Bids(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
+    @login_required(redirect_field_name='login_url')
     def create_bid(request, type_bid: int, client_id: int, body: str, title_bid: str, notifications: int):
         try:
             creator = ClientModel.objects.get(client_id=int(client_id))
@@ -71,11 +74,9 @@ class Bids(LoginRequiredMixin, APIView):
         except Exception as e:
             return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
 
-    # @staticmethod
-    # @api_view(['GET'])
-    # def check_same_status(request, ):
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_one(request, bid: int):
         try:
             serializer = BidModelSerializer(BidModel.objects.get(id=bid), many=False)
@@ -86,6 +87,7 @@ class Bids(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
 
     @staticmethod
+    @login_required(redirect_field_name='login_url')
     def show_category(request, category: str):
         try:
             # take index for database
@@ -104,6 +106,7 @@ class Bids(LoginRequiredMixin, APIView):
     # TODO adding notifications if bid status changed or if staff be do work
     @staticmethod
     @api_view(['POST', 'GET'])
+    @login_required(redirect_field_name='login_url')
     def change_one(request, bid: int, field: str, value: str):
         try:
             obj = BidModel.objects.get(id=bid)
@@ -135,7 +138,6 @@ class Bids(LoginRequiredMixin, APIView):
 
 
 class Clients(LoginRequiredMixin, APIView):
-
     raise_exception = True
 
     _clients_fields = ["client_name", "client_telegram_user_id"]
@@ -147,6 +149,7 @@ class Clients(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_all(request):
         try:
             serializer = ClientModelSerializer(ClientModel.objects.all(), many=True)
@@ -156,6 +159,7 @@ class Clients(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET'])
+    @login_required(redirect_field_name='login_url')
     def show_one(request, client_id: int):
         try:
             serializer = ClientModelSerializer(ClientModel.objects.get(client_id=client_id), many=False)
@@ -167,6 +171,7 @@ class Clients(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['DELETE'])
+    @login_required(redirect_field_name='login_url')
     def remove_client(request, client_id: int):
         try:
             client = ClientModel.objects.get(creator=f"{client_id}")
@@ -180,6 +185,7 @@ class Clients(LoginRequiredMixin, APIView):
 
     @staticmethod
     # @api_view(['POST'])
+    @login_required(redirect_field_name='login_url')
     def create_client(request, name: str, telegram: str):
         tg_id = Clients.validate_telegram_id(telegram)
         if name.isspace() or not tg_id:
@@ -204,6 +210,7 @@ class Clients(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['PUT'])
+    @login_required(redirect_field_name='login_url')
     def change_client(request, client_id: int, field: str, value: str):
         try:
             obj = ClientModel.objects.get(creator=f"{client_id}")
@@ -234,11 +241,11 @@ class Clients(LoginRequiredMixin, APIView):
 
 
 class Staff(LoginRequiredMixin, APIView):
-
     raise_exception = True
 
     @staticmethod
     @api_view(['GET', 'POST'])
+    @login_required(redirect_field_name='login_url')
     def change_one(request, staff_id: int, field: str, value: str):
         try:
             serializer = StaffModelSerializer(StaffModel.objects.get(id=staff_id), many=False)
@@ -250,6 +257,7 @@ class Staff(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET', 'POST'])
+    @login_required(redirect_field_name='login_url')
     def show_all(request):
         try:
             serializer = StaffModelSerializer(StaffModel.objects.all(), many=True)
@@ -270,6 +278,7 @@ class Staff(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET', 'POST'])
+    @login_required(redirect_field_name='login_url')
     def show_one(request, staff_id: int):
         try:
             serializer = StaffModelSerializer(StaffModel.objects.get(id=staff_id), many=False)
@@ -279,6 +288,7 @@ class Staff(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET', 'POST'])
+    @login_required(redirect_field_name='login_url')
     def create_one(request, slug: str):
         try:
             StaffModel.objects.create(name=slug)
@@ -288,6 +298,7 @@ class Staff(LoginRequiredMixin, APIView):
 
     @staticmethod
     @api_view(['GET', 'POST'])
+    @login_required(redirect_field_name='login_url')
     def delete_one(request, staff_id: int):
         try:
             staff = StaffModel.objects.get(id=staff_id)
