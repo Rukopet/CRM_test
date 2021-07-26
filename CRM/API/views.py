@@ -5,9 +5,11 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.core import serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 
 from .models import ClientModel, BidModel
-from .serializers import BidModelSerializer
+from .serializers import BidModelSerializer, ClientModelSerializer
+
 
 # def bids_list(request):
 #     name = ["Oleg", "Vasya", "Petya"]
@@ -20,58 +22,72 @@ def documentation(request):
     return render(request, 'API/documentation.html')
 
 
-class Bids:
+class Bids(APIView):
     @staticmethod
     @api_view(['GET'])
     def show_all(request):
         try:
-            serializer = BidModelSerializer(BidModel.objects.all(), many=True )
-            # qs = BidModel.objects.all()
-            # qs_json = serializers.serialize('json', qs)
+            serializer = BidModelSerializer(BidModel.objects.all(), many=True)
             return Response(serializer.data)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    def create_bid(request, type_bid: str, client_id: int, body: str, title_bid: str, notifications: int):
+    def create_bid(request, type_bid: int, client_id: int, body: str, title_bid: str, notifications: int):
         try:
-            bid = BidModel(type_bid=int(type_bid), client_id=int(client_id), text_bid=body, title=title_bid,
+            creator = ClientModel.objects.get(client_id=int(client_id))
+            bid = BidModel(type_bid=int(type_bid), text_bid=body, title=title_bid,
                            notifications=bool(notifications))
+            bid.save()
+            bid.creator.set([creator])
             bid.save()
             return Clients.json_answer(True, "Bid create successful", 200)
         except Exception as e:
             return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
 
-        # enum_status = [
-        #     (1, 'open'),
-        #     (2, 'in work'),
-        #     (3, 'finished'),
-        # ]
-        #
-        # enum_type_bid = [
-        #     (1, 'fix'),
-        #     (2, 'consultation'),
-        #     (3, 'service')
-        # ]
+    # @staticmethod
+    # @api_view(['GET'])
+    # def check_same_status(request, ):
+    @staticmethod
+    @api_view(['GET'])
+    def show_one(request, bid: int):
+        try:
+            serializer = BidModelSerializer(BidModel.objects.get(id=bid))
+            return Response(serializer.data)
+        except BidModel.DoesNotExist:
+            return Clients.json_answer(False, "element not found", 404)
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
+
     @staticmethod
     def show_category(request, category: str):
         try:
             # take index for database
             idx = ["fix", "consultation", "service", "open", "in work", "finished"].index(category)
             if idx < 3:
-                bids = BidModel.objects.filter(type_bid=idx+1)
+                bids = BidModel.objects.filter(type_bid=idx + 1)
             else:
-                bids = BidModel.objects.filter(status=idx-2)
-            qs_json = serializers.serialize('json', bids)
-            return HttpResponse(qs_json, content_type='application/json')
+                bids = BidModel.objects.filter(status=idx - 2)
+            qs_json = BidModelSerializer(bids)
+            return Response(qs_json.data)
         except ValueError:
             return Clients.json_answer(False, "Bad sort type check docs", 404)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
+    def post(self, request):
+        try:
+            bid = BidModelSerializer(data=request.data)
+            if bid.is_valid():
+                bid.save()
+                return Response(status=201)
+            else:
+                return Response(status=400)
+        except Exception as e:
+            return Clients.json_answer(True, "unknown error: {}".format(e), 400)
 
-class Clients:
 
+class Clients(APIView):
     _clients_fields = ["client_name", "client_telegram_user_id"]
 
     @staticmethod
@@ -83,9 +99,8 @@ class Clients:
     @api_view(['GET'])
     def show_all(request):
         try:
-            qs = ClientModel.objects.all()
-            qs_json = serializers.serialize('json', qs)
-            return HttpResponse(qs_json, content_type='application/json')
+            serializer = ClientModelSerializer(ClientModel.objects.all(), many=True)
+            return Response(serializer.data)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
@@ -93,17 +108,18 @@ class Clients:
     @api_view(['GET'])
     def show_one(request, client_id: int):
         try:
-            qs = [ClientModel.objects.get(client_id=f"{client_id}")]
+            serializer = ClientModelSerializer(ClientModel.objects.get(client_id=client_id), many=False)
+            return Response(serializer.data)
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
-        qs_json = serializers.serialize('json', qs)
-        return Res(qs_json, content_type='application/json')
+        except Exception as e:
+            return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
     @api_view(['DELETE'])
     def remove_client(request, client_id: int):
         try:
-            client = ClientModel.objects.get(client_id=f"{client_id}")
+            client = ClientModel.objects.get(creator=f"{client_id}")
             client.delete()
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
@@ -125,11 +141,22 @@ class Clients:
             return Clients.json_answer(True, "unknown error: {}".format(e), 400)
         return Clients.json_answer(True, "create successful", 200)
 
+    def post(self, request):
+        try:
+            client = ClientModelSerializer(data=request.data)
+            if client.is_valid():
+                client.save()
+                return Response(status=201)
+            else:
+                return Response(status=400)
+        except Exception as e:
+            return Clients.json_answer(True, "unknown error: {}".format(e), 400)
+
     @staticmethod
     @api_view(['PUT'])
     def change_client(request, client_id: int, field: str, value: str):
         try:
-            obj = ClientModel.objects.get(client_id=f"{client_id}")
+            obj = ClientModel.objects.get(creator=f"{client_id}")
 
             if field not in Clients._clients_fields:
                 return Clients.json_answer(False, "Bad field names, or telegram id user", 404)
