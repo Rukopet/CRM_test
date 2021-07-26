@@ -14,9 +14,14 @@ class DateConverter:
         return value
 
 
+# class ApiKeyConverter:
+#     pass
+
+
 register_converter(DateConverter, 'yyyy')
 
 urlpatterns = [
+
     path('documentation/', documentation, name="documentation_url"),
     path('clients/<int:client_id>/change/<slug:field>=<slug:value>/', Clients.change_client),
     path('clients/<int:client_id>/delete/', Clients.remove_client),
@@ -41,4 +46,5 @@ urlpatterns = [
     path('staff/create/', Staff.as_view()),
     path('staff/<int:staff_id>/delete/', Staff.delete_one),
     path('staff/<int:staff_id>/change/<slug:field>=<slug:value>/', Staff.change_one),
+
 ]

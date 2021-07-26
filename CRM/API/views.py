@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 from .models import ClientModel, BidModel, StaffModel
 from .serializers import BidModelSerializer, ClientModelSerializer, StaffModelSerializer
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 # def bids_list(request):
 #     name = ["Oleg", "Vasya", "Petya"]
@@ -22,7 +24,10 @@ def documentation(request):
     return render(request, 'API/documentation.html')
 
 
-class Bids(APIView):
+class Bids(LoginRequiredMixin, APIView):
+
+    raise_exception = True
+
     @staticmethod
     @api_view(['GET'])
     def show_date(request, date: datetime):
@@ -129,7 +134,10 @@ class Bids(APIView):
             return Clients.json_answer(True, "unknown error: {}".format(e), 400)
 
 
-class Clients(APIView):
+class Clients(LoginRequiredMixin, APIView):
+
+    raise_exception = True
+
     _clients_fields = ["client_name", "client_telegram_user_id"]
 
     @staticmethod
@@ -225,7 +233,10 @@ class Clients(APIView):
             return "null"
 
 
-class Staff(APIView):
+class Staff(LoginRequiredMixin, APIView):
+
+    raise_exception = True
+
     @staticmethod
     @api_view(['GET', 'POST'])
     def change_one(request, staff_id: int, field: str, value: str):

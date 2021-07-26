@@ -22,5 +22,6 @@ from .views import main_index
 
 urlpatterns = [
     path('', main_index, name='CRM_url'),
+    path('admin/', admin.site.urls, name="login_url"),
     path('', include('API.urls'))
 ]
