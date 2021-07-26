@@ -10,5 +10,6 @@ bot for telegram notifications: @RANDOMCRM_BOT
 before test this need press start with bot dialog
 
 superuser:
+
     admin
     admin
