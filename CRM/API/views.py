@@ -118,9 +118,9 @@ class Bids(LoginRequiredMixin, APIView):
                 staff_id = StaffModel.objects.get(id=int(value))
                 obj.staff_id.set([staff_id])
             elif field == "status":
-                if obj.notifications() and obj.creator.client_telegram_user_id() not in [0, None]:
+                if obj.notifications and obj.creator.all()[0].client_telegram_user_id not in [0, None]:
                     telegram_notification.send_message("Your bid change your status",
-                                                       obj.creator.client_telegram_user_id)
+                                                       obj.creator.all()[0].client_telegram_user_id)
             elif field != "id":
                 obj[field] = str(value)
             else:
