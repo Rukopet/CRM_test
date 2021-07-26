@@ -1,7 +1,7 @@
 import requests
 
 
-class telegram_notfication:
+class telegram_notification:
     TELEGRAM_URL = "https://api.telegram.org/bot"
     TUTORIAL_BOT_TOKEN = "1860214086:AAFw1RN499MRuTqVGUs9yY6mNOgLiZONetM"
 

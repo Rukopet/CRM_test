@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from .models import ClientModel, BidModel, StaffModel
 from .serializers import BidModelSerializer, ClientModelSerializer, StaffModelSerializer
+from .tg_hook import telegram_notification
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -116,6 +117,10 @@ class Bids(LoginRequiredMixin, APIView):
             elif field == "staff_id":
                 staff_id = StaffModel.objects.get(id=int(value))
                 obj.staff_id.set([staff_id])
+            elif field == "status":
+                if obj.notifications() and obj.creator.client_telegram_user_id() not in [0, None]:
+                    telegram_notification.send_message("Your bid change your status",
+                                                       obj.creator.client_telegram_user_id)
             elif field != "id":
                 obj[field] = str(value)
             else:
