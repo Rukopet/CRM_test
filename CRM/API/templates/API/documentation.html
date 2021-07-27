@@ -30,7 +30,7 @@
         localhost/bids/ &emsp;&emsp; --> вывод всех заявок<br>
         localhost/bids/{int:id}/ &emsp;&emsp; --> вывод информации по заявке с конкретным id<br>
         localhost/bids/{int:id}/delete/ &emsp;&emsp; --> удаление записи заявки с конкретным id<br>
-        localhost/bids/{int:id}/change/{str:field}={str:value}/ &emsp;&emsp; --> изменение конретного поля заявки. Если поле "status", или "staff_id" придет уведомление на телефон, условия: в поле "notifications" у этой заявки true; клиента есть валидный telegram_id; начат диалог с ботов(нужно найти, добавить бота, нажать на кнопку старт <a href="https://t.me/RANDOMCRM_BOT/">RANDOMCRMBOT</a>) <br>
+        localhost/bids/{int:id}/change/{str:field}={str:value}/ &emsp;&emsp; --> изменение конретного поля заявки. Если поле "status", или "staff_id" может прийти уведомнеие в телеграмм, условия: в поле "notifications" у этой заявки true; клиента есть валидный telegram_id; начат диалог с ботов(нужно найти, добавить бота, нажать на кнопку старт <a href="https://t.me/RANDOMCRM_BOT/">RANDOMCRMBOT</a>) <br>
         localhost/bids/{int:type_bid}&{int:client_id}&{str:body}&{slug:title_bid}&{int:notifications}/ &emsp;&emsp; --> создание заявки через get запрос<br>
         localhost/bids/create/ &emsp;&emsp; --> создание заявки через json форму (POST)<br>
         localhost/bids/{str:category}/ &emsp;--> сортировка по категориям, категории разделяются на заявки: <center>&emsp;по типам: "fix", "consultation", "service"</center><center>&emsp;по статусу: "open", "in work", "finished"</center>
