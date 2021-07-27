@@ -16,12 +16,6 @@ from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
 
 
-# def bids_list(request):
-#     name = ["Oleg", "Vasya", "Petya"]
-#     return render(request, 'API/index.html', context={'names': name})
-#
-#
-
 def documentation(request):
     return render(request, 'API/documentation.html')
 
@@ -108,7 +102,7 @@ class Bids(LoginRequiredMixin, APIView):
 
     # TODO adding notifications if bid status changed or if staff be do work
     @staticmethod
-    @api_view(['POST', 'GET'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def change_one(request, bid: int, field: str, value: str):
         try:
@@ -182,7 +176,7 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['DELETE', 'GET'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def remove_client(request, client_id: int):
         try:
@@ -196,7 +190,7 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(True, "delete successful", 200)
 
     @staticmethod
-    @api_view(['POST', 'GET'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def create_client(request, name: str, telegram: str):
         tg_id = Clients.validate_telegram_id(telegram)
@@ -220,7 +214,7 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(True, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST', 'PUT'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def change_client(request, client_id: int, field: str, value: str):
         try:
@@ -255,7 +249,7 @@ class Staff(LoginRequiredMixin, APIView):
     raise_exception = True
 
     @staticmethod
-    @api_view(['GET', 'POST', 'PUT'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def change_one(request, staff_id: int, field: str, value: str):
         try:
@@ -300,7 +294,7 @@ class Staff(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def create_one(request, slug: str):
         try:
@@ -310,7 +304,7 @@ class Staff(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST', 'DELETE'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def delete_one(request, staff_id: int):
         try:
