@@ -4,7 +4,8 @@ COPY requirements.txt ./
 COPY CRM ./
 
 RUN apk update
-RUN apk add busybox-extras vim bash expect
+RUN apk add busybox-extras vim bash expect npm
+RUN npm install --global newman@latest
 RUN pip install -r requirements.txt
 RUN cd CRM
 
