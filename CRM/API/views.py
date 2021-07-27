@@ -89,6 +89,7 @@ class Bids(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error, probably wrong format: {}".format(e), 400)
 
     @staticmethod
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def show_category(request, category: str):
         try:
@@ -220,11 +221,11 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(True, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['PUT'])
+    @api_view(['GET', 'POST', 'PUT'])
     @login_required(redirect_field_name='login_url')
     def change_client(request, client_id: int, field: str, value: str):
         try:
-            obj = ClientModel.objects.get(creator=f"{client_id}")
+            obj = ClientModel.objects.get(client_id=client_id)
             if field == "client_id" or field == "client_date_registration":
                 raise ValueError("Cant change main fields")
             if field == "client_telegram_user_id":
@@ -232,7 +233,7 @@ class Clients(LoginRequiredMixin, APIView):
                     return Clients.json_answer(False, "Bad telegram id, pls check it", 404)
             # anti pattern for exception
             obj.__dict__[field] = value
-            obj.save([field])
+            obj.save()
             return Response(status=200)
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
@@ -259,9 +260,9 @@ class Staff(LoginRequiredMixin, APIView):
     @login_required(redirect_field_name='login_url')
     def change_one(request, staff_id: int, field: str, value: str):
         try:
-            obj = StaffModel.objects.get(id=f"{staff_id}")
+            obj = StaffModel.objects.get(id=staff_id)
             obj.__dict__[field] = value
-            obj.save([field])
+            obj.save()
             return Response(status=200)
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)

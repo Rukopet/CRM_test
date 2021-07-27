@@ -23,7 +23,7 @@ register_converter(DateConverter, 'yyyy')
 urlpatterns = [
 
     path('documentation/', documentation, name="documentation_url"),
-    path('clients/<int:client_id>/change/<slug:field>=<slug:value>/', Clients.change_client),
+    path('clients/<int:client_id>/change/<str:field>=<str:value>/', Clients.change_client),
     path('clients/<int:client_id>/delete/', Clients.remove_client),
     path('clients/<int:client_id>/', Clients.show_one),
     path('clients/create/<slug:name>&<slug:telegram>/', Clients.create_client),
@@ -34,7 +34,7 @@ urlpatterns = [
     path('bids/create/', Bids.as_view()),
     path('bids/create/<int:type_bid>&<int:client_id>&<str:body>&<slug:title_bid>&<int:notifications>/',
          Bids.create_bid),
-    path('bids/<int:bid>/change/<slug:field>=<slug:value>/', Bids.change_one),
+    path('bids/<int:bid>/change/<str:field>=<str:value>/', Bids.change_one),
     path('bids/<int:bid>/', Bids.show_one),
     path('bids/<str:category>/', Bids.show_category),
     path('bids/dates/<yyyy:date>/', Bids.show_date),
@@ -42,9 +42,9 @@ urlpatterns = [
 
     path('staff/', Staff.show_all),
     path('staff/<int:staff_id>/', Staff.show_one),
-    path('staff/create/<slug:slug>/', Staff.create_one),
+    path('staff/create/<str:slug>/', Staff.create_one),
     path('staff/create/', Staff.as_view()),
     path('staff/<int:staff_id>/delete/', Staff.delete_one),
-    path('staff/<int:staff_id>/change/<slug:field>=<slug:value>/', Staff.change_one),
+    path('staff/<int:staff_id>/change/<str:field>=<str:value>/', Staff.change_one),
 
 ]
