@@ -99,7 +99,7 @@ class Bids(LoginRequiredMixin, APIView):
                 bids = BidModel.objects.filter(type_bid=idx + 1)
             else:
                 bids = BidModel.objects.filter(status=idx - 2)
-            qs_json = BidModelSerializer(bids)
+            qs_json = BidModelSerializer(bids, many=True)
             return Response(qs_json.data)
         except ValueError:
             return Clients.json_answer(False, "Bad sort type check docs", 404)
@@ -120,7 +120,7 @@ class Bids(LoginRequiredMixin, APIView):
                 staff_id = StaffModel.objects.get(id=int(value))
                 obj.staff_id.set([staff_id])
             elif field != "id":
-                # anti pattern for exception if bad field
+                # anti pattern for exception if unexpected field
                 obj.__dict__[field] = value
             else:
                 raise ValueError("Cant change id number")
@@ -182,7 +182,7 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['DELETE'])
+    @api_view(['DELETE', 'GET'])
     @login_required(redirect_field_name='login_url')
     def remove_client(request, client_id: int):
         try:
@@ -202,7 +202,6 @@ class Clients(LoginRequiredMixin, APIView):
         tg_id = Clients.validate_telegram_id(telegram)
         if name.isspace() or not tg_id:
             return Clients.json_answer(True, "Bad name format, or telegram id", 400)
-
         try:
             ClientModel(client_name=name, client_telegram_user_id=tg_id).save()
         except Exception as e:
@@ -256,7 +255,7 @@ class Staff(LoginRequiredMixin, APIView):
     raise_exception = True
 
     @staticmethod
-    @api_view(['GET', 'POST'])
+    @api_view(['GET', 'POST', 'PUT'])
     @login_required(redirect_field_name='login_url')
     def change_one(request, staff_id: int, field: str, value: str):
         try:
@@ -270,7 +269,7 @@ class Staff(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def show_all(request):
         try:
@@ -291,7 +290,7 @@ class Staff(LoginRequiredMixin, APIView):
             return Clients.json_answer(True, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST'])
+    @api_view(['GET'])
     @login_required(redirect_field_name='login_url')
     def show_one(request, staff_id: int):
         try:
@@ -311,7 +310,7 @@ class Staff(LoginRequiredMixin, APIView):
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
 
     @staticmethod
-    @api_view(['GET', 'POST'])
+    @api_view(['GET', 'POST', 'DELETE'])
     @login_required(redirect_field_name='login_url')
     def delete_one(request, staff_id: int):
         try:
