@@ -12,6 +12,7 @@ from .serializers import BidModelSerializer, ClientModelSerializer, StaffModelSe
 from .tg_hook import telegram_notification
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
 
 
@@ -118,16 +119,19 @@ class Bids(LoginRequiredMixin, APIView):
                 staff_id = StaffModel.objects.get(id=int(value))
                 obj.staff_id.set([staff_id])
             elif field != "id":
-                obj[field] = str(value)
+                # anti pattern for exception if bad field
+                obj.__dict__[field] = value
             else:
                 raise ValueError("Cant change id number")
+            obj.save()
+
             if field == "status" or field == "staff_id":
                 if obj.notifications and obj.creator.all()[0].client_telegram_user_id not in [0, None]:
                     telegram_notification.send_message(
                         "Your bid has `changed` status" if field == "status"
                         else "An executor has been assigned to your bid",
                         obj.creator.all()[0].client_telegram_user_id)
-            obj.save()
+
             return Response(status=200)
         except Exception as e:
             return Clients.json_answer(False, "unknown error: {}".format(e), 400)
@@ -191,7 +195,7 @@ class Clients(LoginRequiredMixin, APIView):
             return Clients.json_answer(True, "delete successful", 200)
 
     @staticmethod
-    # @api_view(['POST'])
+    @api_view(['POST', 'GET'])
     @login_required(redirect_field_name='login_url')
     def create_client(request, name: str, telegram: str):
         tg_id = Clients.validate_telegram_id(telegram)
@@ -221,15 +225,15 @@ class Clients(LoginRequiredMixin, APIView):
     def change_client(request, client_id: int, field: str, value: str):
         try:
             obj = ClientModel.objects.get(creator=f"{client_id}")
-
-            if field not in Clients._clients_fields:
-                return Clients.json_answer(False, "Bad field names, or telegram id user", 404)
+            if field == "client_id" or field == "client_date_registration":
+                raise ValueError("Cant change main fields")
             if field == "client_telegram_user_id":
                 if Clients.validate_telegram_id(value) in [False, "null"]:
                     return Clients.json_answer(False, "Bad telegram id, pls check it", 404)
-            obj[field] = str(value)
+            # anti pattern for exception
+            obj.__dict__[field] = value
             obj.save([field])
-            return Clients.show_one(request, obj["id"])
+            return Response(status=200)
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
         except Exception as e:
@@ -255,8 +259,10 @@ class Staff(LoginRequiredMixin, APIView):
     @login_required(redirect_field_name='login_url')
     def change_one(request, staff_id: int, field: str, value: str):
         try:
-            serializer = StaffModelSerializer(StaffModel.objects.get(id=staff_id), many=False)
-            return Response(serializer.data)
+            obj = StaffModel.objects.get(id=f"{staff_id}")
+            obj.__dict__[field] = value
+            obj.save([field])
+            return Response(status=200)
         except ClientModel.DoesNotExist:
             return Clients.json_answer(False, "element not found", 404)
         except Exception as e:
