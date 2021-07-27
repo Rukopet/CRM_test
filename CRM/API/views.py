@@ -124,7 +124,8 @@ class Bids(LoginRequiredMixin, APIView):
             if field == "status" or field == "staff_id":
                 if obj.notifications and obj.creator.all()[0].client_telegram_user_id not in [0, None]:
                     telegram_notification.send_message(
-                        "Your bid change status" if field == "status" else "An executor has been assigned to your bid",
+                        "Your bid has `changed` status" if field == "status"
+                        else "An executor has been assigned to your bid",
                         obj.creator.all()[0].client_telegram_user_id)
             obj.save()
             return Response(status=200)
