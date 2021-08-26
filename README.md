@@ -1,4 +1,4 @@
-# SberClick_test
+# CRM_test
 start with docker:
 ```shell
 ./docker_buid_start.sh
